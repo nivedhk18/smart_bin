@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "522219468655",
+    "firebase_url": "https://smartbin-1818-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smartbin-1818",
+    "storage_bucket": "smartbin-1818.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522219468655:android:e3dae028329e1051c01a9a",
+        "android_client_info": {
+          "package_name": "com.example.project1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAR5lXOD6Of1kRf0FzrLVErW6dYVBaVpDI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522219468655:android:1b87242edd0da24bc01a9a",
+        "android_client_info": {
+          "package_name": "com.example.wbin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAR5lXOD6Of1kRf0FzrLVErW6dYVBaVpDI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
