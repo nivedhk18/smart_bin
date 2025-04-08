@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'userdashboard.dart'; // Ensure this file exists and contains UserDashboard
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'userdashboard.dart'; // ✅ Make sure this file contains UserDashboard widget
 
 class UserLoginPage extends StatefulWidget {
   @override
@@ -12,26 +13,53 @@ class _UserLoginPageState extends State<UserLoginPage> {
   bool _obscurePassword = true;
   bool _keepLoggedIn = false;
 
-  void _login() {
+  void _login() async {
     String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
 
-    if (username == "user" && password == "user") {
-      // Navigate to user dashboard with dummy bin data
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) =>
-                  UserDashboard(binName: "Bin A", wetWaste: 40, dryWaste: 60),
-        ),
-      );
-    } else {
+    try {
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .where('username', isEqualTo: username)
+              .get();
+
+      if (snapshot.docs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Username not found"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final user = snapshot.docs.first.data() as Map<String, dynamic>;
+      final storedPassword = user['password'];
+
+      if (storedPassword == password) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => UserDashboard(
+                  binName: 'Bin A', // Temporary mock data
+                  wetWaste: 50,
+                  dryWaste: 40,
+                ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Incorrect password"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Invalid Username or Password"),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text("Login error: $e"), backgroundColor: Colors.red),
       );
     }
   }
@@ -51,8 +79,6 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 20),
-
-                // Username Field
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
@@ -61,8 +87,6 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   ),
                 ),
                 SizedBox(height: 15),
-
-                // Password Field
                 TextField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
@@ -75,41 +99,33 @@ class _UserLoginPageState extends State<UserLoginPage> {
                             ? Icons.visibility_off
                             : Icons.visibility,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                      onPressed:
+                          () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                     ),
                   ),
                 ),
                 SizedBox(height: 10),
-
-                // Keep Logged In Checkbox
                 Row(
                   children: [
                     Checkbox(
                       value: _keepLoggedIn,
-                      onChanged: (value) {
-                        setState(() {
-                          _keepLoggedIn = value ?? false;
-                        });
-                      },
+                      onChanged:
+                          (value) =>
+                              setState(() => _keepLoggedIn = value ?? false),
                     ),
                     Text("Keep me logged in"),
                   ],
                 ),
                 SizedBox(height: 20),
-
-                // Login Button
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     onPressed: _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          Colors.blue, // Updated for newer Flutter versions
+                      backgroundColor: Colors.blue,
                     ),
                     child: Text(
                       "Login",
@@ -118,19 +134,13 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   ),
                 ),
                 SizedBox(height: 10),
-
-                // Forgot Password
                 Center(
                   child: TextButton(
-                    onPressed: () {
-                      // Implement forgot password functionality
-                    },
+                    onPressed: () {},
                     child: Text("Forgot password?"),
                   ),
                 ),
                 SizedBox(height: 20),
-
-                // Signup Prompt
                 Center(
                   child: Text.rich(
                     TextSpan(

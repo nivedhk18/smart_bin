@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'userlogin.dart'; // Importing login page for navigation
 
 class UserDashboard extends StatefulWidget {
@@ -20,9 +21,17 @@ class UserDashboard extends StatefulWidget {
 class _UserDashboardState extends State<UserDashboard> {
   final TextEditingController _complaintController = TextEditingController();
 
-  void _submitComplaint() {
+  void _submitComplaint() async {
     String complaintText = _complaintController.text.trim();
     if (complaintText.isNotEmpty) {
+      await FirebaseFirestore.instance.collection('complaints').add({
+        'complaint': complaintText,
+        'timestamp': Timestamp.now(),
+        'binName': widget.binName,
+        'wetWaste': widget.wetWaste,
+        'dryWaste': widget.dryWaste,
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Complaint registered successfully!")),
       );

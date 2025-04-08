@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'bin_tracking.dart';
+import 'adduser.dart';
+import 'complaint.dart';
 
 class DashboardPage extends StatelessWidget {
+  final String username;
+
+  const DashboardPage({Key? key, required this.username}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,15 +29,17 @@ class DashboardPage extends StatelessWidget {
                 context,
                 Icons.local_shipping,
                 "Track Bin",
-                BinTrackingPage(), // Navigates to Bin Tracking Page
+                BinTrackingPage(),
               ),
+              SizedBox(height: 20),
+              _buildCard(context, Icons.person_add, "Add User", AddUserPage()),
               SizedBox(height: 20),
               _buildCard(
                 context,
                 Icons.report_problem,
                 "Complaints",
-                null,
-              ), // Complaints Box Added
+                ComplaintPage(username: username), // Username passed correctly
+              ),
             ],
           ),
         ),
@@ -41,7 +49,7 @@ class DashboardPage extends StatelessWidget {
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         currentIndex: 1,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.location_on),
             label: "Locations",
@@ -57,7 +65,7 @@ class DashboardPage extends StatelessWidget {
     BuildContext context,
     IconData icon,
     String title,
-    Widget? page,
+    Widget page,
   ) {
     return Card(
       elevation: 3,
@@ -66,12 +74,10 @@ class DashboardPage extends StatelessWidget {
         leading: Icon(icon, size: 40),
         title: Text(title, style: TextStyle(fontSize: 18)),
         onTap: () {
-          if (page != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => page),
-            );
-          }
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => page),
+          );
         },
       ),
     );
