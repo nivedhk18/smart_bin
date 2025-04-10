@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'userdashboard.dart'; // ✅ Make sure this file contains UserDashboard widget
+import 'globals.dart' as globals;
 
 class UserLoginPage extends StatefulWidget {
   @override
@@ -38,17 +40,31 @@ class _UserLoginPageState extends State<UserLoginPage> {
       final storedPassword = user['password'];
 
       if (storedPassword == password) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => UserDashboard(
-                  binName: 'Bin A', // Temporary mock data
-                  wetWaste: 50,
-                  dryWaste: 40,
-                ),
-          ),
+        globals.loggedInUsername = username; // ✅ Store for use in dashboard
+
+        String binNumber = username.length > 1 ? username[1] : '1';
+        String binPath = 'bin/bin$binNumber/binLevels';
+
+        DatabaseReference binRef = FirebaseDatabase.instance.ref().child(
+          binPath,
         );
+        DatabaseEvent event = await binRef.once();
+        Map? binData = event.snapshot.value as Map?;
+
+        if (binData != null) {
+          // Proceed to dashboard (dashboard will load bin data by itself)
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const UserDashboard()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Bin data not found."),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -100,9 +116,9 @@ class _UserLoginPageState extends State<UserLoginPage> {
                             : Icons.visibility,
                       ),
                       onPressed:
-                          () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
+                          () => setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          }),
                     ),
                   ),
                 ),
@@ -111,9 +127,9 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   children: [
                     Checkbox(
                       value: _keepLoggedIn,
-                      onChanged:
-                          (value) =>
-                              setState(() => _keepLoggedIn = value ?? false),
+                      onChanged: (value) {
+                        setState(() => _keepLoggedIn = value ?? false);
+                      },
                     ),
                     Text("Keep me logged in"),
                   ],
@@ -130,27 +146,6 @@ class _UserLoginPageState extends State<UserLoginPage> {
                     child: Text(
                       "Login",
                       style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                Center(
-                  child: TextButton(
-                    onPressed: () {},
-                    child: Text("Forgot password?"),
-                  ),
-                ),
-                SizedBox(height: 20),
-                Center(
-                  child: Text.rich(
-                    TextSpan(
-                      text: "Don't have an account? ",
-                      children: [
-                        TextSpan(
-                          text: "Sign up",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ],
                     ),
                   ),
                 ),

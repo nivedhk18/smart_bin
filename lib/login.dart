@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dashboard.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'firebase_options.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -174,15 +172,6 @@ class _LoginPageState extends State<LoginPage> {
                                   fontSize: 16,
                                 ),
                               ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        // TODO: Implement forgot password functionality
-                      },
-                      child: Text("Forgot password?"),
                     ),
                   ),
                   SizedBox(height: 20),

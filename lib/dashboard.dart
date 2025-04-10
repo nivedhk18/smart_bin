@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'bin_tracking.dart';
 import 'adduser.dart';
+import 'add_collector.dart'; // ✅ Import AddCollectorPage
 import 'complaint.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -38,25 +39,18 @@ class DashboardPage extends StatelessWidget {
                 context,
                 Icons.report_problem,
                 "Complaints",
-                ComplaintPage(username: username), // Username passed correctly
+                ComplaintPage(username: username),
+              ),
+              SizedBox(height: 20),
+              _buildCard(
+                context,
+                Icons.group_add,
+                "Add Collector",
+                AddCollectorPage(),
               ),
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 1,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.location_on),
-            label: "Locations",
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.delete), label: "Bins"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
-        ],
       ),
     );
   }

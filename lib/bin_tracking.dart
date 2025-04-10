@@ -25,31 +25,6 @@ class _BinTrackingPageState extends State<BinTrackingPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Search Bar
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: "Search for bin",
-                  prefixIcon: Icon(Icons.search, color: Colors.black54),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 15,
-                    horizontal: 10,
-                  ),
-                ),
-              ),
-            ),
             SizedBox(height: 20),
             // Bin Grid
             Expanded(
@@ -188,28 +163,43 @@ class BinCard extends StatelessWidget {
           BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
         ],
       ),
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(10),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.delete, size: 40, color: Colors.black54),
-          SizedBox(height: 10),
-          Text("BIN $binNumber", style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          CircularPercentIndicator(
-            radius: 45.0,
-            lineWidth: 8.0,
-            percent: wetLevel / 100,
-            center: Text("Wet\n$wetLevel%", textAlign: TextAlign.center),
-            progressColor: Colors.green,
+          Icon(Icons.delete, size: 30, color: Colors.black54),
+          SizedBox(height: 6),
+          Text(
+            "BIN $binNumber",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           SizedBox(height: 10),
-          CircularPercentIndicator(
-            radius: 45.0,
-            lineWidth: 8.0,
-            percent: dryLevel / 100,
-            center: Text("Dry\n$dryLevel%", textAlign: TextAlign.center),
-            progressColor: Colors.brown,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              CircularPercentIndicator(
+                radius: 35.0,
+                lineWidth: 6.0,
+                percent: wetLevel / 100,
+                center: Text(
+                  "Wet\n$wetLevel%",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 10),
+                ),
+                progressColor: Colors.green,
+              ),
+              CircularPercentIndicator(
+                radius: 35.0,
+                lineWidth: 6.0,
+                percent: dryLevel / 100,
+                center: Text(
+                  "Dry\n$dryLevel%",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 10),
+                ),
+                progressColor: const Color.fromARGB(255, 238, 3, 3),
+              ),
+            ],
           ),
         ],
       ),

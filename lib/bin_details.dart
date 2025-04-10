@@ -14,8 +14,8 @@ class BinDetailsPage extends StatefulWidget {
     required this.fillLevel,
     required this.wetLevel,
     required this.dryLevel,
-    required longitude,
     required latitude,
+    required longitude,
     required timestamp,
   }) : super(key: key);
 
@@ -26,7 +26,6 @@ class BinDetailsPage extends StatefulWidget {
 class _BinDetailsPageState extends State<BinDetailsPage> {
   double latitude = 0.0;
   double longitude = 0.0;
-  String timestamp = "Unknown";
   bool isLoading = true;
 
   @override
@@ -38,38 +37,44 @@ class _BinDetailsPageState extends State<BinDetailsPage> {
   Future<void> _fetchLiveLocation() async {
     try {
       String binId = 'bin${widget.binNumber}';
-      final locationRef = FirebaseDatabase.instance.ref(
-        'bin/$binId/binLevels/location',
-      );
+      final locationRef = FirebaseDatabase.instance.ref('bin/$binId/location');
       final snapshot = await locationRef.get();
 
-      if (snapshot.exists) {
-        final data = Map<String, dynamic>.from(snapshot.value as Map);
-        print("Fetched location: $data");
+      if (snapshot.exists && snapshot.value != null) {
+        final data = Map<String, dynamic>.from(
+          (snapshot.value as Map<Object?, Object?>).map(
+            (key, value) => MapEntry(key.toString(), value),
+          ),
+        );
 
         setState(() {
           latitude = double.tryParse(data['latitude'].toString()) ?? 0.0;
           longitude = double.tryParse(data['longitude'].toString()) ?? 0.0;
-          timestamp = data['timestamp'].toString();
           isLoading = false;
         });
       } else {
-        setState(() => isLoading = false);
+        setState(() {
+          isLoading = false;
+        });
       }
     } catch (e) {
-      print("Error fetching location: $e");
-      setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
-  void _openGoogleMaps() async {
-    final url = Uri.parse(
-      "https://www.google.com/maps/search/?api=1&query=$latitude,$longitude",
+  void _goToGoogleMaps() async {
+    final Uri googleMapsUrl = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
     );
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
     } else {
-      throw 'Could not open the map.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not launch Google Maps')));
     }
   }
 
@@ -93,9 +98,7 @@ class _BinDetailsPageState extends State<BinDetailsPage> {
               : Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Bin Status Card
                     Container(
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -130,31 +133,6 @@ class _BinDetailsPageState extends State<BinDetailsPage> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20),
-                    Text(
-                      "Bin Coordinates",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text("Latitude: $latitude", style: TextStyle(fontSize: 16)),
-                    Text(
-                      "Longitude: $longitude",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, color: Colors.orange, size: 20),
-                        SizedBox(width: 5),
-                        Text(
-                          "Updated at: $timestamp",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    ),
                     SizedBox(height: 30),
                     Container(
                       padding: EdgeInsets.all(16),
@@ -175,7 +153,10 @@ class _BinDetailsPageState extends State<BinDetailsPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: _openGoogleMaps,
+                              onPressed:
+                                  (latitude != 0.0 && longitude != 0.0)
+                                      ? _goToGoogleMaps
+                                      : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.orange,
                                 padding: EdgeInsets.symmetric(vertical: 14),

@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'userlogin.dart'; // Importing login page for navigation
+import 'userlogin.dart';
+import 'globals.dart' as globals;
 
 class UserDashboard extends StatefulWidget {
-  final String binName;
-  final int wetWaste;
-  final int dryWaste;
-
-  const UserDashboard({
-    Key? key,
-    required this.binName,
-    required this.wetWaste,
-    required this.dryWaste,
-  }) : super(key: key);
+  const UserDashboard({Key? key}) : super(key: key);
 
   @override
   _UserDashboardState createState() => _UserDashboardState();
@@ -20,6 +13,55 @@ class UserDashboard extends StatefulWidget {
 
 class _UserDashboardState extends State<UserDashboard> {
   final TextEditingController _complaintController = TextEditingController();
+  int wetWaste = 0;
+  int dryWaste = 0;
+  String binName = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBinData();
+  }
+
+  void _loadBinData() async {
+    String username = globals.loggedInUsername;
+
+    if (username.length < 2) return;
+
+    String binNumber = username[1];
+
+    if (!RegExp(r'\d').hasMatch(binNumber)) {
+      print('Invalid bin number in username: $username');
+      return;
+    }
+
+    String binId = 'bin$binNumber';
+    setState(() {
+      binName = 'Bin $binNumber';
+    });
+
+    try {
+      final dbRef = FirebaseDatabase.instance
+          .ref()
+          .child('bin')
+          .child(binId)
+          .child('binLevels');
+
+      final snapshot = await dbRef.get();
+
+      if (snapshot.exists) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        setState(() {
+          wetWaste = data['wet'] ?? 0;
+          dryWaste = data['dry'] ?? 0;
+        });
+      } else {
+        print('No data found for $binId');
+      }
+    } catch (e) {
+      print('Error loading data for $binId: $e');
+    }
+  }
 
   void _submitComplaint() async {
     String complaintText = _complaintController.text.trim();
@@ -27,9 +69,10 @@ class _UserDashboardState extends State<UserDashboard> {
       await FirebaseFirestore.instance.collection('complaints').add({
         'complaint': complaintText,
         'timestamp': Timestamp.now(),
-        'binName': widget.binName,
-        'wetWaste': widget.wetWaste,
-        'dryWaste': widget.dryWaste,
+        'binName': binName,
+        'wetWaste': wetWaste,
+        'dryWaste': dryWaste,
+        'username': globals.loggedInUsername,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,8 +115,6 @@ class _UserDashboardState extends State<UserDashboard> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 20),
-
-            // Waste Bin Information Card
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -85,25 +126,27 @@ class _UserDashboardState extends State<UserDashboard> {
                   Icon(Icons.delete, size: 50, color: Colors.black54),
                   SizedBox(height: 10),
                   Text(
-                    widget.binName,
+                    binName.isNotEmpty ? binName : "Loading bin...",
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildWasteInfo("Wet", widget.wetWaste),
+                      _buildWasteInfo("Wet", wetWaste),
                       SizedBox(width: 40),
-                      _buildWasteInfo("Dry", widget.dryWaste),
+                      _buildWasteInfo("Dry", dryWaste),
                     ],
                   ),
                 ],
               ),
             ),
-
-            SizedBox(height: 20),
-
-            // Complaint Text Field (Replacing the previous "Waste status" text)
+            SizedBox(height: 30),
+            Text(
+              "Report a Complaint",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
             TextField(
               controller: _complaintController,
               maxLines: 3,
@@ -113,10 +156,7 @@ class _UserDashboardState extends State<UserDashboard> {
                 hintText: "Describe your complaint here...",
               ),
             ),
-
             SizedBox(height: 20),
-
-            // Register Complaint Button
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -140,14 +180,31 @@ class _UserDashboardState extends State<UserDashboard> {
     );
   }
 
-  // Helper Widget for Waste Information
   Widget _buildWasteInfo(String label, int percentage) {
     return Column(
       children: [
         Text(label, style: TextStyle(fontSize: 18)),
-        Text(
-          "$percentage%",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        SizedBox(height: 8),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(
+                value: percentage / 100,
+                strokeWidth: 6,
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  label == "Wet" ? Colors.green : Colors.brown,
+                ),
+              ),
+            ),
+            Text(
+              "$percentage%",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
       ],
     );

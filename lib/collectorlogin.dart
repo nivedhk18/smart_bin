@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'binlist.dart'; // Import BinListPage
+import 'collector_bin.dart'; // Updated to point to CollectorBinPage
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore
 
 class CollectorLoginPage extends StatefulWidget {
   @override
@@ -11,11 +12,46 @@ class _CollectorLoginPageState extends State<CollectorLoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _keepLoggedIn = false;
 
-  void _login() {
-    // Navigate to BinListPage without checking credentials
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => BinListPage()),
+  void _login() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('collectors')
+              .where('username', isEqualTo: username)
+              .where('password', isEqualTo: password)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Login success - Navigate to CollectorBinPage
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CollectorBinPage()),
+        );
+      } else {
+        _showErrorDialog('Invalid username or password');
+      }
+    } catch (e) {
+      _showErrorDialog('Error logging in. Please try again.');
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Login Failed'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -78,26 +114,6 @@ class _CollectorLoginPageState extends State<CollectorLoginPage> {
                 child: Text(
                   "Login",
                   style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            Center(
-              child: TextButton(
-                onPressed: () {},
-                child: Text(
-                  "Forgot password?",
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Center(
-              child: TextButton(
-                onPressed: () {},
-                child: Text(
-                  "Don't have an Account? Sign up",
-                  style: TextStyle(color: Colors.grey),
                 ),
               ),
             ),
