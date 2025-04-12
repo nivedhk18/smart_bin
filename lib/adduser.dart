@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class AddUserPage extends StatefulWidget {
   @override
@@ -19,21 +20,36 @@ class _AddUserPageState extends State<AddUserPage> {
       setState(() => _isLoading = true);
 
       try {
+        // Create user in Firebase Auth
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        // ✅ Store user data in Firestore
+        // Save user info in Firestore
         await FirebaseFirestore.instance.collection('users').add({
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
           'password': _passwordController.text.trim(),
         });
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('User created successfully')));
+        // Extract bin number from username
+        String username = _usernameController.text.trim();
+        String binNumber = username.substring(1, 3); // Assumes B23U5 => 23
+
+        // Create bin entry in Realtime Database
+        DatabaseReference dbRef = FirebaseDatabase.instance.ref(
+          'bin/bin$binNumber',
+        );
+        await dbRef.set({
+          'wet': 0,
+          'dry': 0,
+          'location': {'latitude': 0.0, 'longitude': 0.0},
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User and bin created successfully')),
+        );
 
         _usernameController.clear();
         _emailController.clear();
@@ -57,6 +73,19 @@ class _AddUserPageState extends State<AddUserPage> {
     }
   }
 
+  String? _validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Enter a username';
+    }
+
+    // Ensure it starts with 'B' followed by at least 2 digits
+    if (!RegExp(r'^B\d{2}').hasMatch(value)) {
+      return 'Format: B[BinNo][UserNo] (e.g. B23U5)';
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,15 +104,10 @@ class _AddUserPageState extends State<AddUserPage> {
               TextFormField(
                 controller: _usernameController,
                 decoration: InputDecoration(
-                  labelText: "Username(format:B[BinNo][UserNo])",
+                  labelText: "Username (format: B[BinNo][UserNo])",
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter a username';
-                  }
-                  return null;
-                },
+                validator: _validateUsername,
               ),
               SizedBox(height: 20),
               TextFormField(
